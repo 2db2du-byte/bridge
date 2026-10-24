@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bridge</title>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@300;400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="tng">
+
+<!-- Startup: one click wakes the bridge (browsers only allow sound after a click) -->
+<div id="engage" class="engage">
+  <canvas id="engage-stars"></canvas>
+  <div class="engage-box">
+    <div class="engage-bar"><span>LCARS</span><i></i><b>ACCESS 2DB2</b></div>
+    <h1>U.S.S. RABBID RACCOON</h1>
+    <p class="engage-sub">NCC-2DB2 &nbsp;·&nbsp; BRIDGE SYSTEMS STANDING BY</p>
+    <button id="engage-btn" class="engage-btn">ENGAGE</button>
+    <p class="engage-hint">Click to wake the bridge (turns on sounds and the computer voice)</p>
+  </div>
+</div>
+
+<div id="frame" class="frame">
+  <!-- ===== Left column (LCARS sidebar / TOS console) ===== -->
+  <aside class="sidebar">
+    <div class="elbow elbow-top c-orange"><span class="elbow-code">01-2DB2</span></div>
+    <nav id="nav" class="nav">
+      <button data-go="captain" class="pill c-peach"><em>02</em>CAPTAIN</button>
+      <button data-go="engineering" class="pill c-orange"><em>03</em>ENGINEERING</button>
+      <button data-go="ops" class="pill c-lilac"><em>04</em>OPS</button>
+      <button data-go="science" class="pill c-blue"><em>05</em>SCIENCE</button>
+      <button data-go="comms" class="pill c-peri"><em>06</em>COMMS</button>
+      <button data-go="tactical" class="pill c-red"><em>07</em>TACTICAL</button>
+      <button data-go="helm" class="pill c-gold"><em>08</em>HELM</button>
+      <button data-go="cargo" class="pill c-tan"><em>09</em>CARGO BAY</button>
+      <button data-go="alert" class="pill c-rose"><em>10</em>CONDITION</button>
+    </nav>
+    <div class="side-orders">
+      <div class="orders-head"><span>DR. BEVERLY CRUSHER</span><b id="orders-date"></b></div>
+      <ol id="orders" class="orders-list"></ol>
+      <div class="orders-foot"><span id="todo-count">0</span> OPEN ON THE TO-DO LIST</div>
+      <a id="inbox" class="inbox-chip" href="obsidian://open?vault=SecondBrain&amp;file=0%20Inbox/Inbox" title="Notes waiting to be sorted. Tell Claude: sort my inbox">📥 <span id="inbox-count">0</span> TO SORT</a>
+    </div>
+    <button id="ds9-btn" class="ds9-btn" title="Deep Space Nine: walk the Promenade, every door is one of your crew">
+      <span class="ds9-ring"></span><b>DEEP SPACE NINE</b><small>THE PROMENADE</small>
+    </button>
+    <div class="cascade" id="cascade"></div>
+    <div class="elbow elbow-bottom c-lilac"><span class="elbow-code">47-ALPHA</span></div>
+  </aside>
+
+  <!-- ===== Top bar ===== -->
+  <header class="topbar">
+    <div class="bar-seg c-orange grow"></div>
+    <div class="title-block">
+      <h1 class="ship-name">U.S.S. RABBID RACCOON</h1>
+      <span class="ship-reg">NCC-2DB2 · MAIN BRIDGE</span>
+    </div>
+    <div class="bar-seg c-peri w60"></div>
+    <div class="readout-block">
+      <span class="lbl">STARDATE</span><span id="stardate" class="big">00000.0</span>
+    </div>
+    <div class="bar-seg c-gold w30"></div>
+    <div class="readout-block">
+      <span class="lbl">SHIP TIME</span><span id="clock" class="big">00:00</span>
+    </div>
+    <div class="bar-seg c-lilac cap-r w40"></div>
+  </header>
+
+  <!-- ===== TOS-only light strip ===== -->
+  <div class="tos-lights" id="tos-lights"></div>
+
+  <!-- ===== Stations ===== -->
+  <main id="stations" class="stations">
+
+    <!-- Captain's chair: the main viewscreen -->
+    <section id="captain" class="station viewscreen-station span-3 tall">
+      <div class="st-head c-peach"><em>02</em><h2>MAIN VIEWSCREEN</h2><span class="officer u-red" title="CAPT. RABBID"><i class="pips"><u></u><u></u><u></u><u></u></i>CAPT. RABBID</span><span class="officer u-red" title="CMDR. RIKER"><i class="pips"><u></u><u></u><u></u></i>CMDR. RIKER</span><i></i><b id="warp-label">IMPULSE</b></div>
+      <div class="viewscreen">
+        <canvas id="stars"></canvas>
+        <video id="cam" class="cam" autoplay muted playsinline hidden></video>
+        <div id="cam-hud" class="cam-hud" hidden>
+          <span class="cam-dot"></span><b>VISUAL CONTACT</b><span class="cam-src" id="cam-src"></span>
+          <span class="cam-mic">AUDIO <i class="mic-bar"><i id="mic-level"></i></i></span>
+        </div>
+        <div class="vs-corner tl"></div><div class="vs-corner tr"></div>
+        <div class="vs-corner bl"></div><div class="vs-corner br"></div>
+        <div class="vs-hud">
+          <div class="vs-greet">
+            <div id="greeting" class="greet-line">GOOD EVENING, CAPTAIN</div>
+            <div id="condition-line" class="cond-line">ALL SYSTEMS NOMINAL</div>
+            <button id="onscreen" class="lc-btn c-peach onscreen-btn" title="Put your webcam (and mic level) on the main viewscreen">ON SCREEN</button>
+          </div>
+        </div>
+        <div class="vs-reticle"></div>
+        <!-- YouTube on the right side of the viewscreen (Captain's Quarters > YOUTUBE) -->
+        <div id="yt" class="yt" hidden>
+          <form id="yt-form" class="yt-head">
+            <span class="yt-tag">▶ SUBSPACE VIDEO</span>
+            <input id="yt-q" type="search" placeholder="Search YouTube or paste a link" autocomplete="off" spellcheck="false">
+            <button type="submit" class="lc-btn c-peach">SEARCH</button>
+            <button type="button" id="yt-back" class="lc-btn c-peri" hidden>LIST</button>
+            <button type="button" id="yt-ff" class="lc-btn c-lilac" title="Open this in Firefox (your YouTube account)">FIREFOX</button>
+            <button type="button" id="yt-close" class="lc-btn c-orange">CLOSE</button>
+          </form>
+          <div class="yt-tabs" id="yt-tabs">
+            <button type="button" data-feed="subs" class="on">SUBSCRIPTIONS</button>
+            <button type="button" data-feed="home">HOME</button>
+            <button type="button" data-feed="later">WATCH LATER</button>
+            <button type="button" data-feed="history">HISTORY</button>
+            <button type="button" data-feed="recent">ON THE BRIDGE</button>
+            <button type="button" data-feed="search" hidden>SEARCH</button>
+          </div>
+          <div id="yt-list" class="yt-list"></div>
+          <iframe id="yt-player" class="yt-player" hidden title="YouTube video" referrerpolicy="strict-origin-when-cross-origin"
+                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>
+          <div id="yt-blocked" class="yt-blocked" hidden>
+            <b>Locked to YouTube</b>
+            <span>The owner won't let it play here, so it's playing on your YouTube in a new Firefox tab.</span>
+            <button type="button" id="yt-blocked-ff" class="lc-btn c-lilac">OPEN IT AGAIN</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Condition / Red alert, with the master systems display -->
+    <section id="alert" class="station span-1 tall">
+      <div class="st-head c-rose"><em>10</em><h2>CONDITION</h2><span class="officer u-gray"><i class="pips"></i>COMPUTER</span><i></i></div>
+      <div class="cond-body">
+        <div id="cond-badge" class="cond-badge green">CONDITION GREEN</div>
+        <svg id="msd" class="msd" viewBox="0 0 300 170" aria-label="ship systems display">
+          <defs>
+            <linearGradient id="hull" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stop-color="var(--msd-a)" stop-opacity=".55"/>
+              <stop offset="1" stop-color="var(--msd-b)" stop-opacity=".15"/>
+            </linearGradient>
+            <radialGradient id="glow-r"><stop offset="0" stop-color="#ff6a3d"/><stop offset="1" stop-color="#ff6a3d" stop-opacity="0"/></radialGradient>
+            <radialGradient id="glow-b"><stop offset="0" stop-color="#7fd8ff"/><stop offset="1" stop-color="#7fd8ff" stop-opacity="0"/></radialGradient>
+          </defs>
+          <g class="msd-grid">
+            <line x1="0" y1="85" x2="300" y2="85"/><line x1="150" y1="0" x2="150" y2="170"/>
+          </g>
+          <!-- nacelles (engineering) -->
+          <g id="msd-eng" class="msd-part">
+            <path d="M150 104 L112 64 M150 104 L188 64" class="msd-line"/>
+            <rect x="40" y="56" width="110" height="14" rx="7" fill="url(#hull)" class="msd-line"/>
+            <rect x="150" y="56" width="110" height="14" rx="7" fill="url(#hull)" class="msd-line"/>
+            <circle cx="46" cy="63" r="9" fill="url(#glow-r)" class="bussard"/>
+            <circle cx="254" cy="63" r="9" fill="url(#glow-r)" class="bussard"/>
+            <rect x="60" y="60" width="80" height="6" rx="3" fill="url(#glow-b)" class="nacelle-glow"/>
+            <rect x="160" y="60" width="80" height="6" rx="3" fill="url(#glow-b)" class="nacelle-glow"/>
+          </g>
+          <!-- secondary hull (ops / storage) -->
+          <g id="msd-ops" class="msd-part">
+            <path d="M126 98 Q150 88 174 98 L170 146 Q150 156 130 146 Z" fill="url(#hull)" class="msd-line"/>
+            <circle cx="150" cy="140" r="5" fill="url(#glow-b)"/>
+          </g>
+          <!-- saucer (science / bridge) -->
+          <g id="msd-sci" class="msd-part">
+            <ellipse cx="150" cy="40" rx="78" ry="26" fill="url(#hull)" class="msd-line"/>
+            <ellipse cx="150" cy="40" rx="48" ry="15" class="msd-line thin"/>
+            <ellipse cx="150" cy="36" rx="12" ry="5" fill="url(#hull)" class="msd-line"/>
+          </g>
+          <path d="M146 64 L142 92 L158 92 L154 64 Z" fill="url(#hull)" class="msd-line"/>
+        </svg>
+        <ul id="alert-list" class="alert-list"></ul>
+        <div class="btn-row">
+          <button id="freeai" class="lc-btn c-blue" title="Your free AIs slide out right here on the Bridge (click again to hide)">FREE AIs</button>
+          <button id="claude-btn" class="lc-btn c-orange" title="Claude slides out right here on the Bridge (click again to hide)">CLAUDE</button>
+          <button id="rollcall" class="lc-btn c-peri">ROLL CALL</button>
+          <button id="drill" class="lc-btn c-rose">RED ALERT DRILL</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Engineering -->
+    <section id="engineering" class="station span-1">
+      <div class="st-head c-orange"><em>03</em><h2>ENGINEERING</h2><span class="officer u-gold" title="LT. CMDR. LA FORGE"><i class="pips"><u></u><u></u><u class="h"></u></i>LT. CMDR. LA FORGE</span><i></i></div>
+      <div class="eng-body">
+        <div class="warp-core" id="warp-core" title="Warp core: pulses faster when the PC works harder">
+          <div class="core-cap top"></div>
+          <div class="core-tube"><div class="core-pulse"></div><div class="core-pulse p2"></div><div class="core-pulse p3"></div></div>
+          <div class="core-chamber"></div>
+          <div class="core-tube lower"><div class="core-pulse down"></div><div class="core-pulse down p2"></div></div>
+          <div class="core-cap bottom"></div>
+        </div>
+        <div class="eng-readouts">
+          <div class="meter"><div class="m-lbl"><span>CPU LOAD</span><b id="cpu-pct">0%</b></div><div class="m-bar"><i id="cpu-bar"></i></div></div>
+          <div class="meter"><div class="m-lbl"><span>CPU TEMP</span><b id="cpu-temp">0°</b></div><div class="m-bar"><i id="cpu-temp-bar"></i></div></div>
+          <div class="meter"><div class="m-lbl"><span>MEMORY</span><b id="ram">0/0 GB</b></div><div class="m-bar"><i id="ram-bar"></i></div></div>
+          <div class="meter"><div class="m-lbl"><span id="gpu-name">GPU</span><b id="gpu-util">0%</b></div><div class="m-bar c2"><i id="gpu-bar"></i></div></div>
+          <div class="meter"><div class="m-lbl"><span>GPU TEMP</span><b id="gpu-temp">0°</b></div><div class="m-bar c2"><i id="gpu-temp-bar"></i></div></div>
+          <div class="meter"><div class="m-lbl"><span>GPU MEMORY</span><b id="vram">0/0 GB</b></div><div class="m-bar c2"><i id="vram-bar"></i></div></div>
+          <div class="eng-small">
+            <span>POWER <b id="gpu-power">0 W</b></span>
+            <span>UPTIME <b id="uptime">0 H</b></span>
+            <span>WARP <b id="warp-factor">1.0</b></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Ops -->
+    <section id="ops" class="station span-1">
+      <div class="st-head c-lilac"><em>04</em><h2>OPS · BACKUPS</h2><span class="officer u-gold" title="CHIEF O'BRIEN"><i class="pips"><u class="h"></u></i>CHIEF O'BRIEN</span><i></i></div>
+      <div class="ops-body">
+        <div class="backup-card" title="Hourly backup of the whole home folder to the Seagate (Kopia)">
+          <div class="bk-light" id="bk-light"></div>
+          <div>
+            <div class="bk-title">BACKUP STATUS</div>
+            <div class="bk-main" id="bk-main">CHECKING…</div>
+            <div class="bk-sub" id="bk-sub"></div>
+          </div>
+          <button id="backup-now" class="lc-btn c-lilac bk-btn">BACK UP NOW</button>
+        </div>
+        <div class="usage-card" id="usage-card" title="Your Claude plan: the 5-hour session and the weekly limit">
+          <div class="u-title">CLAUDE USAGE</div>
+          <div class="u-row"><span>SESSION</span><div class="m-bar c2"><i id="u-five"></i></div><b id="u-five-pct">—</b><small id="u-five-reset"></small></div>
+          <div class="u-row"><span>WEEK</span><div class="m-bar c2"><i id="u-week"></i></div><b id="u-week-pct">—</b><small id="u-week-reset"></small></div>
+        </div>
+        <div class="quarters" title="Your private accounts. They open in your browser; the Bridge never sees what's inside.">
+          <div class="q-title">CAPTAIN'S QUARTERS</div>
+          <div class="q-links">
+            <a class="q-tile" href="https://www.icloud.com/" target="_blank" rel="noopener"><span class="q-ico q-icloud">☁</span><b>iCLOUD</b><small>photos · mail · drive</small></a>
+            <a class="q-tile" href="https://mail.proton.me/u/0/inbox" target="_blank" rel="noopener"><span class="q-ico q-proton">✉</span><b>PROTON MAIL</b><small>private inbox</small></a>
+            <a class="q-tile" id="yt-open" href="#" title="YouTube plays on the right side of the main viewscreen"><span class="q-ico q-youtube">▶</span><b>YOUTUBE</b><small>on the viewscreen</small></a>
+            <a class="q-tile" href="https://music.apple.com/us/new" target="_blank" rel="noopener"><span class="q-ico q-music">♫</span><b>APPLE MUSIC</b><small>songs · music videos</small></a>
+          </div>
+        </div>
+        <div id="drives" class="drives"></div>
+      </div>
+    </section>
+
+    <!-- Science -->
+    <section id="science" class="station span-1">
+      <div class="st-head c-blue"><em>05</em><h2>SCIENCE</h2><span class="officer u-gold" title="LT. CMDR. DATA"><i class="pips"><u></u><u></u><u class="h"></u></i>LT. CMDR. DATA</span><i></i></div>
+      <div class="sci-body">
+        <div class="sci-links">
+          <a class="sci-tile" href="http://127.0.0.1:8090/" target="_blank"><span class="dot" id="kiwix-dot"></span><b>LIBRARY COMPUTER</b><small>165 offline books</small></a>
+          <a class="sci-tile" href="http://127.0.0.1:8091/" target="_blank"><span class="dot" id="maps-dot"></span><b>STELLAR CARTOGRAPHY</b><small>offline maps</small></a>
+        </div>
+        <div id="courses" class="courses"></div>
+      </div>
+    </section>
+
+    <!-- Tactical -->
+    <section id="tactical" class="station span-1">
+      <div class="st-head c-red"><em>07</em><h2>TACTICAL</h2><span class="officer u-gold" title="LT. WORF"><i class="pips"><u></u><u></u></i>LT. WORF</span><span class="officer u-gold" title="LT. YAR"><i class="pips"><u></u><u></u></i>LT. YAR</span><i></i></div>
+      <div class="tac-body">
+        <div class="shields" id="shields">
+          <svg viewBox="0 0 100 60" class="shield-svg"><path d="M50 4 C70 4 92 14 96 30 C92 46 70 56 50 56 C30 56 8 46 4 30 C8 14 30 4 50 4 Z"/></svg>
+          <div><div class="sh-lbl">SHIELDS (FIREWALL)</div><div class="sh-val" id="shields-val">—</div></div>
+        </div>
+        <div class="link-grid">
+          <a href="https://academy.hackthebox.com" target="_blank" class="lk c-red"><em>T1</em>HTB ACADEMY</a>
+          <a href="https://app.hackthebox.com/starting-point" target="_blank" class="lk c-red"><em>T2</em>STARTING POINT</a>
+          <a href="https://overthewire.org/wargames/bandit/" target="_blank" class="lk c-orange"><em>T3</em>BANDIT</a>
+          <a href="https://tryhackme.com" target="_blank" class="lk c-orange"><em>T4</em>TRYHACKME</a>
+          <a href="https://picoctf.org" target="_blank" class="lk c-gold"><em>T5</em>PICOCTF</a>
+          <a href="https://letsdefend.io" target="_blank" class="lk c-gold"><em>T6</em>LETSDEFEND</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Helm -->
+    <section id="helm" class="station span-1">
+      <div class="st-head c-gold"><em>08</em><h2>HELM</h2><span class="officer u-red" title="ENS. CRUSHER"><i class="pips"><u></u></i>ENS. CRUSHER</span><i></i></div>
+      <div class="helm-body">
+        <button class="helm-btn c-gold" data-launch="mtga"><em>H1</em><b>MTG ARENA</b><small>Magic: The Gathering</small></button>
+        <button class="helm-btn c-orange" data-launch="steam"><em>H2</em><b>STEAM</b><small>game library</small></button>
+        <button class="helm-btn c-peach" data-launch="heroic"><em>H3</em><b>HEROIC</b><small>Epic · GOG · Amazon</small></button>
+        <button class="helm-btn c-peri" data-launch="discord"><em>H4</em><b>DISCORD</b><small>subspace chatter</small></button>
+      </div>
+    </section>
+
+    <!-- Comms -->
+    <section id="comms" class="station span-2">
+      <div class="st-head c-peri"><em>06</em><h2>COMMS · HAILING FREQUENCIES</h2><span class="officer u-blue" title="COUNSELOR TROI"><i class="pips"><u></u><u></u><u class="h"></u></i>COUNSELOR TROI</span><i></i></div>
+      <div class="comms-body" id="comms-list"></div>
+    </section>
+
+    <!-- Cargo bay -->
+    <section id="cargo" class="station span-1">
+      <div class="st-head c-tan"><em>09</em><h2>CARGO BAY</h2><span class="officer u-gold" title="LT. BARCLAY"><i class="pips"><u></u><u></u></i>LT. BARCLAY</span><i></i></div>
+      <div class="cargo-body">
+        <div class="crates">
+          <div class="crate"><span>BASEBALL</span></div><div class="crate"><span>FOOTBALL</span></div>
+          <div class="crate"><span>HOCKEY</span></div><div class="crate"><span>HOOPS</span></div>
+        </div>
+        <div class="cargo-status">
+          <div class="cg-title">CARD CATALOG</div>
+          <div class="cg-main">AWAITING SCANNER</div>
+          <div class="cg-sub">Nikon D3100 camera test on the next order list. Then the catalog lives here.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Bottom bar: Captain's log + switches ===== -->
+  <footer class="bottombar">
+    <div class="bar-seg c-lilac w40"></div>
+    <form id="log-form" class="log-form">
+      <label for="log-input"><small class="tenfwd">TEN FORWARD ·</small> CAPTAIN'S LOG, STARDATE <span id="log-sd">0</span>:</label>
+      <input id="log-input" maxlength="500" autocomplete="off" placeholder="Guinan is listening… anything worth remembering goes to your second brain inbox">
+      <button class="lc-btn c-orange" type="submit">RECORD</button>
+    </form>
+    <div class="switches">
+      <button id="sw-era" class="sw c-peri" title="Switch between Picard's bridge and Kirk's bridge">ERA: TNG</button>
+      <button id="sw-sound" class="sw c-gold">SOUND: ON</button>
+      <button id="sw-voice" class="sw c-peach">VOICE: ON</button>
+    </div>
+    <div class="bar-seg c-orange cap-r grow"></div>
+  </footer>
+</div>
+
+<!-- Red alert overlay -->
+<div id="red-overlay" class="red-overlay" hidden>
+  <div class="ra-bar"></div>
+  <div class="ra-box">
+    <div class="ra-title">RED ALERT</div>
+    <ul id="ra-list"></ul>
+    <button id="ra-ack" class="lc-btn c-rose">ACKNOWLEDGE</button>
+  </div>
+  <div class="ra-bar"></div>
+</div>
+<div id="toast" class="toast"></div>
+
+<!-- Claude panel: Claude Code slides out over the right side, the Bridge stays put -->
+<aside id="claude-panel" class="claude-panel" aria-hidden="true">
+  <div class="cp-head">
+    <div class="cp-cap"></div>
+    <h2>CLAUDE <small>FIRST OFFICER</small></h2>
+    <button id="cp-pop" class="lc-btn c-peri" title="Open this same Claude in its own window">POP OUT</button>
+    <button id="cp-hide" class="lc-btn c-orange" title="Slide Claude away (it keeps working)">HIDE</button>
+  </div>
+  <iframe id="cp-frame" title="Claude Code"></iframe>
+  <div class="cp-foot"><div class="cp-cap"></div><div class="cp-bar"></div></div>
+</aside>
+
+<!-- Free AIs panel: the free AI web pages slide out over the left side, one tab each -->
+<aside id="ai-panel" class="claude-panel ai-panel" aria-hidden="true">
+  <div class="cp-head">
+    <div class="cp-cap"></div>
+    <h2>FREE AIs <small>MR. DATA</small></h2>
+    <div class="ap-tabs" role="tablist">
+      <button class="lc-btn c-blue on" data-ai="tenforward" role="tab" title="Ten Forward (Open WebUI): chat with the free AIs">TEN FORWARD</button>
+      <button class="lc-btn c-blue" data-ai="vane" role="tab" title="Vane: AI web search with sources">VANE</button>
+      <button class="lc-btn c-blue" data-ai="notebook" role="tab" title="Open Notebook: AI notes and research on your own papers">NOTEBOOK</button>
+    </div>
+    <button id="ap-pop" class="lc-btn c-peri" title="Open this page in Firefox">POP OUT</button>
+    <button id="ap-hide" class="lc-btn c-orange" title="Slide the free AIs away (they keep running)">HIDE</button>
+  </div>
+  <iframe data-ai="tenforward" class="on" title="Ten Forward" allow="microphone; clipboard-read; clipboard-write"></iframe>
+  <iframe data-ai="vane" title="Vane" allow="clipboard-read; clipboard-write"></iframe>
+  <iframe data-ai="notebook" title="Open Notebook" allow="microphone; clipboard-read; clipboard-write"></iframe>
+  <div class="cp-foot"><div class="cp-bar"></div><div class="cp-cap"></div></div>
+</aside>
+
+<!-- Deep Space Nine: the Promenade. Every shop door opens one of Rabbid's crew agents in the crew drawer. -->
+<div id="ds9" class="ds9" hidden>
+  <div class="ds9-top">
+    <div class="ds9-wedge"></div>
+    <div class="ds9-title"><h2>DEEP SPACE 9</h2><small>THE PROMENADE · PICK A DOOR, MEET THE CREW</small></div>
+    <div class="ds9-wedge r"></div>
+    <button id="ds9-close" class="ds9-x" title="Back to the Bridge">BACK TO THE BRIDGE</button>
+  </div>
+  <div class="ds9-level"><span>UPPER LEVEL</span></div>
+  <div class="ds9-row" id="ds9-upper"></div>
+  <div class="ds9-level"><span>LOWER LEVEL</span></div>
+  <div class="ds9-row" id="ds9-lower"></div>
+  <div class="ds9-floor"></div>
+</div>
+
+<!-- Crew drawer: the agent behind the door you opened -->
+<aside id="crew-panel" class="claude-panel crew-panel" aria-hidden="true">
+  <div class="cp-head">
+    <div class="cp-cap"></div>
+    <h2 id="crew-title">CREW <small></small></h2>
+    <button id="crew-hide" class="lc-btn c-orange" title="Close the door (the conversation stays for next time)">CLOSE DOOR</button>
+  </div>
+  <iframe id="crew-frame" title="Crew member"></iframe>
+  <div class="cp-foot"><div class="cp-cap"></div><div class="cp-bar"></div></div>
+</aside>
+
+<script src="app.js"></script>
+</body>
+</html>

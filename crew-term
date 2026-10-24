@@ -1,0 +1,9 @@
+#!/bin/sh
+# What a Promenade door runs in the Bridge's crew drawer: one of Rabbid's crew agents (~/.claude/agents), each in
+# its own tmux session so the conversation is still there next time. Only these names are allowed.
+case "$1" in
+  riker|data|wesley|worf|yar|geordi|obrien|crusher|guinan|troi|barclay|q|ensign) ;;
+  *) echo "No crew member by that name."; sleep 5; exit 1 ;;
+esac
+cd "$HOME" || exit 1
+exec tmux -L crew -f "$HOME/Projects/bridge/claude-tmux.conf" new-session -A -s "$1" claude --agent "$1"
